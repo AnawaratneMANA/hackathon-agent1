@@ -40,3 +40,13 @@ export async function fetchAgentAdvice(smeId, itemCode) {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export async function fetchSupplierRiskAssessment(smeId, itemCode) {
+  const url = `${FASTAPI_BASE}/api/assess-supplier-risk?item_id=${encodeURIComponent(itemCode)}`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { 'x-sme-code': smeId }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}

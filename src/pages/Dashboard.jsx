@@ -1,33 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { fetchItems, fetchInventoryStatus, fetchEOQ, fetchAgentAdvice } from '../api/Api.js';
-import ItemDropdown from '../components/ItemDropdown.jsx';
+import { fetchItems, fetchEOQ, fetchSupplierRiskAssessment } from '../api/Api.js';
 import ItemDetailCard from '../components/ItemDetailCard.jsx';
-import AdviceCard from '../components/AdviceCard.jsx';
+import SupplierRiskCard from '../components/SupplierRiskCard.jsx';
 
 export default function Dashboard({ smeId }) {
   const [items, setItems] = useState([]);
   const [loadingItems, setLoadingItems] = useState(true);
   const [selected, setSelected] = useState(null);
-  const [inventory, setInventory] = useState(null);
-  const [advice, setAdvice] = useState(null);
-  const [loadingAdvice, setLoadingAdvice] = useState(false);
+  const [supplierRisk, setSupplierRisk] = useState(null);
   const [loadingEoq, setLoadingEoq] = useState(false);
+  const [loadingRisk, setLoadingRisk] = useState(false);
+  const [expandedItems, setExpandedItems] = useState({});
+  const [eoqCache, setEoqCache] = useState({});
 
   useEffect(() => {
     setLoadingItems(true);
     fetchItems(smeId).then(data=>setItems(data)).catch(console.error).finally(()=>setLoadingItems(false));
   }, [smeId]);
 
-  async function onSelect(item) {
-    setSelected(item);
-    setInventory(null);
-    setAdvice(null);
-    try {
-      const inv = await fetchInventoryStatus(smeId, item.itemId);
-      setInventory(inv);
-    } catch (e) {
-      console.error(e);
-      setInventory({ error: e.message });
+  async function onSelectItem(item) {
+    // Toggle selection
+    if (selected?.itemId === item.itemId) {
+      setSelected(null);
+      setExpandedItems(prev => ({ ...prev, [item.itemId]: false }));
+    } else {
+      setSelected(item);
+      setExpandedItems(prev => ({ ...prev, [item.itemId]: true }));
     }
   }
 
@@ -36,45 +34,88 @@ export default function Dashboard({ smeId }) {
     setLoadingEoq(true);
     try {
       const eoq = await fetchEOQ(smeId, selected.itemId);
-      // attach eoq to inventory view
-      setInventory(prev => ({ ...prev, eoq }));
+      setEoqCache(prev => ({ ...prev, [selected.itemId]: eoq }));
     } catch (e) {
       console.error(e);
-      setInventory(prev => ({ ...prev, eoqError: e.message }));
+      setEoqCache(prev => ({ ...prev, [selected.itemId]: { error: e.message } }));
     } finally { setLoadingEoq(false); }
   }
 
-  async function onGetAdvice() {
+  async function onGetSupplierRiskAssessment() {
     if (!selected) return;
-    setLoadingAdvice(true);
-    setAdvice(null);
+    setLoadingRisk(true);
+    setSupplierRisk(null);
     try {
-      const ai = await fetchAgentAdvice(smeId, selected.itemId);
-      setAdvice(ai);
+      const risk = await fetchSupplierRiskAssessment(smeId, selected.itemId);
+      setSupplierRisk(risk);
     } catch (e) {
       console.error(e);
-      setAdvice({ error: e.message });
-    } finally { setLoadingAdvice(false); }
+      setSupplierRisk({ error: e.message });
+    } finally { setLoadingRisk(false); }
   }
 
+  const dashboardStyle = {
+    padding: '20px',
+    backgroundColor: '#f5f5f5',
+    minHeight: '100vh',
+    width: '100%',
+  };
+
+  const titleStyle = {
+    fontSize: '32px',
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: '30px',
+    margin: 0,
+    paddingBottom: '15px',
+  };
+
+  const tilesContainerStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+    gap: '20px',
+    marginBottom: '30px',
+  };
+
+  const resultContainerStyle = {
+    maxWidth: '900px',
+    margin: '0 auto',
+  };
+
   return (
-    <div style={{padding:20}}>
-      <h1>ProcureLens Dashboard</h1>
-      <div style={{marginBottom:10}}>
-        <label>Select item:</label>
-        <ItemDropdown items={items} loading={loadingItems} onSelect={onSelect}/>
-      </div>
+    <div style={dashboardStyle}>
+      <h1 style={titleStyle}>SuperNorm Procument Advisor Dashboard</h1>
+      
+      {loadingItems ? (
+        <div style={{ textAlign: 'center', padding: '40px', fontSize: '18px', color: '#666' }}>
+          Loading items...
+        </div>
+      ) : (
+        <>
+          <div style={tilesContainerStyle}>
+            {items.map(item => (
+              <ItemDetailCard
+                key={item.itemId}
+                item={item}
+                eoqData={eoqCache[item.itemId]}
+                isSelected={selected?.itemId === item.itemId}
+                isExpanded={expandedItems[item.itemId] || false}
+                onSelect={() => onSelectItem(item)}
+                onGetEOQ={onGetEOQ}
+                onGetSupplierRiskAssessment={onGetSupplierRiskAssessment}
+                loadingEoq={loadingEoq && selected?.itemId === item.itemId}
+                loadingRisk={loadingRisk && selected?.itemId === item.itemId}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
-      {selected && <ItemDetailCard
-          item={selected}
-          inventory={inventory}
-          onGetEOQ={onGetEOQ}
-          onGetAdvice={onGetAdvice}
-          loadingEoq={loadingEoq}
-          loadingAdvice={loadingAdvice}
-      />}
-
-      {advice && <AdviceCard data={advice} />}
+      {supplierRisk && (
+        <div style={resultContainerStyle}>
+          <SupplierRiskCard data={supplierRisk} />
+        </div>
+      )}
     </div>
   );
 }
