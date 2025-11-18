@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { fetchItems, fetchEOQ, fetchSupplierRiskAssessment } from '../api/Api.js';
 import ItemDetailCard from '../components/ItemDetailCard.jsx';
-import SupplierRiskCard from '../components/SupplierRiskCard.jsx';
+import SupplierRiskModal from '../components/SupplierRiskModal.jsx';
+import Navbar from '../components/Navbar.jsx';
 
 export default function Dashboard({ smeId }) {
   const [items, setItems] = useState([]);
@@ -83,7 +84,9 @@ export default function Dashboard({ smeId }) {
   };
 
   return (
-    <div style={dashboardStyle}>
+    <>
+      <Navbar />
+      <div style={dashboardStyle}>
       <h1 style={titleStyle}>SuperNorm Procument Advisor Dashboard</h1>
       
       {loadingItems ? (
@@ -112,10 +115,13 @@ export default function Dashboard({ smeId }) {
       )}
 
       {supplierRisk && (
-        <div style={resultContainerStyle}>
-          <SupplierRiskCard data={supplierRisk} />
-        </div>
+        <SupplierRiskModal
+          data={supplierRisk}
+          isOpen={!!supplierRisk}
+          onClose={() => setSupplierRisk(null)}
+        />
       )}
-    </div>
+      </div>
+    </>
   );
 }
