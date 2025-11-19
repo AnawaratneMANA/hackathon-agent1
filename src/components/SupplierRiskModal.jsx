@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { formatAnalysisText, renderFormattedContent } from '../utils/textFormatter.jsx';
+import StockRefillAgent from './StockRefillAgent.jsx';
 
 export default function SupplierRiskModal({ data, isOpen, onClose }) {
   const [expandedSection, setExpandedSection] = useState('overview');
@@ -77,12 +78,15 @@ export default function SupplierRiskModal({ data, isOpen, onClose }) {
 
           {/* Best Supplier */}
           {data.best_supplier && (
-            <div style={{ ...bestSupplierBoxStyle, borderColor: '#28a745', backgroundColor: '#d4edda' }}>
-              <div style={{ fontSize: '12px', fontWeight: '600', color: '#155724', textTransform: 'uppercase', marginBottom: '8px' }}>
-                ✓ Recommended Supplier
-              </div>
-              <div style={{ fontSize: '20px', fontWeight: '700', color: '#155724' }}>
-                {data.best_supplier}
+            <div>
+              <div style={{ ...bestSupplierBoxStyle, borderColor: '#28a745', backgroundColor: '#d4edda' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: '#155724', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  ✓ Recommended Supplier
+                </div>
+                <div style={{ fontSize: '20px', fontWeight: '700', color: '#155724', marginBottom: '12px' }}>
+                  {data.best_supplier}
+                </div>
+                <StockRefillAgent itemId={data.item_id} supplierId={data.best_supplier} />
               </div>
             </div>
           )}
