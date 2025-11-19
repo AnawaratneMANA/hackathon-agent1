@@ -61,7 +61,7 @@ export default function Navbar() {
     <nav style={navbarStyle}>
       <h1 style={logoStyle}>
         <span>📊</span>
-        ProcureLens
+        SuperNorm 
       </h1>
       <div style={rightSectionStyle}>
         <div style={smeInfoStyle}>

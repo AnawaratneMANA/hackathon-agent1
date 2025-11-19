@@ -3,7 +3,7 @@ const FASTAPI_BASE = 'http://localhost:8000';
 
 export async function loginUser(username, password) {
   // Simple demo: map username->sme. In real app call auth endpoint.
-  if (username === 'demo' && password === 'demo') {
+  if (username === 'SME_001' && password === 'sme123') {
     return { smeId: 'SME_001', name: 'Anami Traders' };
   }
   throw new Error('Invalid credentials');
